@@ -1,12 +1,9 @@
+############################
 #READ IN BEHAVIOURAL DATA
+############################
 
-# Input: This file needs to be in a folder that also contains a folder with the data (named data)
-# Output: This script outputs:
-#                  - data from all participants saved into a single file (my.data)
-#                  - Reaction times
-#                  - Accuracy
-#                  - Confidence based on accuracy, social info or norm
-
+# Reads in behavioural and demographic data from relevant .csv files, 
+# adds few additional columns useful for further analysis, and saves the files
 
 #############################################################################
 
@@ -29,6 +26,21 @@ data.folder<-c(paste(db.folder,"\\UlfGesaRasmus\\Confidence_Task_Magda\\confiden
 # participants to exclude
 part.excl<-NULL
 ###############################################################################
+
+### READ IN DEMOGRAPHIC DATA
+
+# Extract data from Participants_Fragebögen and save as my.demographics
+files<-list.files(path=data.folder,pattern='*gen.csv',full.names=T)
+my.demo<-data.frame(lapply(files, fread))
+
+# Delete unwanted columns
+keep <- c("ID.used","Alter","Geschlecht")
+my.demo <- my.demo[keep]
+
+# SAVE IT
+save(my.data,file='confidence_attention_DM.RData')
+
+################################################################################
 
 ### READ IN TRIAL DATA
 
@@ -67,6 +79,11 @@ my.data$social[str_detect(my.data$condition,c("incongruent*"))]<- -1
 my.data$social2<-factor(my.data$social,labels = c("invalid\nsocial information","no social\ninformation","valid\nsocial information"))
 my.data$social3<-factor(my.data$social,labels=c("invalid","none","valid"))
 
+# C_CHOICE - CORREcT or INCORRECT response
+my.data$c_choice<-factor(my.data$key_resp_direction.corr,labels=c("incorrect","correct"))
+
+# zRT - normalized RT (????)
+my.data[,zRT:=scale(as.numeric(key_resp_direction.rt,na.rm=T)),by=participant]
 
 
 # SAVE IT
@@ -74,16 +91,4 @@ save(my.data,file='confidence_attention.RData')
 
 ################################################################################
 
-### READ IN DEMOGRAPHIC DATA
-
-# Extract data from Participants_Fragebögen and save as my.demographics
-files<-list.files(path=data.folder,pattern='*gen.csv',full.names=T)
-my.demo<-data.frame(lapply(files, fread))
-
-# Delete unwanted columns
-keep <- c("ID.used","Alter","Geschlecht")
-my.demo <- my.demo[keep]
-
-# SAVE IT
-save(my.data,file='confidence_attention_DM.RData')
 
