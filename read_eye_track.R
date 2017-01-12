@@ -3,10 +3,10 @@
 #######
 files_eye<-list.files(path=data.folder,pattern='gaze.txt',full.names=T)
 #first read in whole text file
-text_file<-scan(files_eye[1],character(0),sep="\n")
+text_file<-scan(files_eye[3],character(0),sep="\n")
 regexp<-"Trial Started"
 regexp2<-"Trial Ended"
-regexp3<-"^[[:digit:]]{10}"
+regexp3<-"^[[:digit:]]{10,11}"
 #where are trial start commands?
 start_trial_lines<-which(str_detect(text_file,regexp))
 end_trial_lines<-which(str_detect(text_file,regexp2))
@@ -24,6 +24,7 @@ helper<-eye.data$V1
 for (i in 1:length(trial_start_times))
   helper2[helper>=trial_start_times[i]&helper<=trial_end_times[i]]<-i
 eye.data$trial<-helper2
+unique(helper2)
 rm(helper,helper2)
 #remove all eye tracking not belonging to particular trials
 eye.data<-
@@ -32,7 +33,6 @@ eye.data<-
 ##########
 #plot eyetracking of a trial
 #########
-
 ggplot(aes(x=as.integer(V1/1000),y=V2),data=subset(eye.data,trial<=20))+geom_line()+facet_wrap(~trial,scales="free_x")
-hist(eye.data$V2)
+hist(eye.data$V2,breaks=seq(0,1500,10))
 
