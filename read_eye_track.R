@@ -19,7 +19,7 @@ eye.analysis.list<-list()
 #get pp number assuming that pps have a four digit number
 eye.participant<-NULL
 for(i in 1:length(files.eye)){
-  eye.participant[i]<-as.numeric(str_extract(files_eye[i],"[[:digit:]]{4}"))
+  eye.participant[i]<-as.numeric(str_extract(files.eye[i],"[[:digit:]]{4}"))
   #first clean data this creates file.txt that is then read by the next function
   clean_eye_tracker_data(i)
   
@@ -33,13 +33,11 @@ for(i in 1:length(files.eye)){
 #prepare my.data
 namevector<-names(eye.analysis.list[[1]])
 my.data[,(namevector):=list(0,'','',0,0,0,0,0)]
-sel.col<-which(names(my.data)%in%namevector)
 ##############
 for (i in length(files.eye)){
   my.data[my.data$participant==eye.participant[i],(namevector):=eye.analysis.list[[i]]]
 }
 #ok now we can start analysing the data
-
 
 help.data<-subset(my.data,participant==1842)
 length(help.data$zConf)

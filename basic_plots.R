@@ -42,7 +42,8 @@ colorScheme<-c("#F5A503","#56D9CD", "#3AA1BF") #yellow, l.blue, d.blue
 fig.accuracy <- list()
 
 s.accuracy<-
-  group_by(my.data,participant,social3)%>%
+  my.data %>% 
+  group_by(participant,social3) %>%
   summarise(mean_corr=mean(key_resp_direction.corr*100),N=length(key_resp_direction.corr))
 
 p.accuracy <-

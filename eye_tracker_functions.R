@@ -3,7 +3,7 @@
 clean_eye_tracker_data<-function(id){
   
   #first read in whole text file
-  text_file<-scan(files_eye[2],character(0),sep="\n")
+  text_file<-scan(files.eye[id],character(0),sep="\n")
   
   #########
   #search file for some expressions for the start and end of trial
@@ -16,8 +16,8 @@ clean_eye_tracker_data<-function(id){
   end_trial_lines<-which(str_detect(text_file,regexp2))
   
   #when did trials start?
-  trial_start_times<-as.numeric(str_extract(text_file[start_trial_lines],pattern=regexp3))
-  trial_end_times<-as.numeric(str_extract(text_file[end_trial_lines],pattern=regexp3))
+  trial_start_times<<-as.numeric(str_extract(text_file[start_trial_lines],pattern=regexp3))
+  trial_end_times<<-as.numeric(str_extract(text_file[end_trial_lines],pattern=regexp3))
   
   #save remaining data
   cat(text_file[-c(start_trial_lines,end_trial_lines)],file="file.txt",sep="\n")
@@ -86,7 +86,7 @@ create_eye_track_data<-function(){
   eye.data<-eye.data[!(eye.data$change==helper&eye.data$change==2),]
   rm(helper)
   #last cell must be 2
-  eye.data$change[nrow(eye.data2)]<-2
+  eye.data$change[nrow(eye.data)]<-2
   #check
   #ggplot(aes(x=as.integer(V1/1000),y=V2),data=subset(eye.data,trial<=20))+geom_line()+facet_wrap(~trial,scales="free_x")+geom_line(aes(y=change*1000,x=as.integer(V1/1000)))
   return(eye.data)
