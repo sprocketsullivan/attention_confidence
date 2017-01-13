@@ -32,28 +32,12 @@ for(i in 1:length(files.eye)){
 #add these to my.data
 #prepare my.data
 namevector<-names(eye.analysis.list[[1]])
-my.data[,(namevector):=list(0,'','',0,0,0,0,0)]
+nv<-which(names(my.data)%in%namevector)
+my.data[,(namevector):=NULL]
+my.data[,nv:=list(0,'','',0,0,0,0,0)]
 ##############
-for (i in length(files.eye)){
-  my.data[my.data$participant==eye.participant[i],(namevector):=eye.analysis.list[[i]]]
+for (i in 1:length(files.eye)){
+  sel<-which(my.data$participant==eye.participant[i])
+  my.data[sel,(nv):=eye.analysis.list[[i]]]
 }
 #ok now we can start analysing the data
-
-help.data<-subset(my.data,participant==1842)
-length(help.data$zConf)
-selector<-(help.data$trials.thisN+1)%in%ec.wide$trial
-help.data<-help.data[selector,]
-help.data$ratio<-ec.wide$ratio
-help.data$ratio2<-ifelse(help.data$ratio>0.5,help.data$ratio-0.5,0.5-help.data$ratio)
-
-
-
-
-ggplot(aes(y=zConf,x=I(),col=c_choice),data=help.data)+geom_point()+facet_wrap(~social3)+stat_smooth()
-ggplot(aes(x=key_resp_direction.rt,col=ratio2,y=zConf),data=subset(help.data,social3="none"&key_resp_direction.rt<2))+geom_point()
-m.1<-lm(zConf~ratio2*key_resp_direction.rt,data=help.data)
-summary(m.1)
-help.data$key_resp_direction.rt
-
-
-
