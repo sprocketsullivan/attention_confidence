@@ -56,8 +56,7 @@ p.accuracy <-
 f.accuracy <- group_by(s.accuracy,participant) %>%
   do(ACC = p.accuracy %+% ., 
      ACC_F = p.accuracy + facet_wrap(~ participant))
-  
-  
+#f.accuracy$ACC_F
 ### RT - MEAN
 s.RT.M<-
   group_by(my.data,participant,c_choice,social3)%>%
@@ -74,7 +73,7 @@ p.RT.M <-
 f.RT.M <- group_by(s.RT.M,participant) %>%
   do(RT.M = p.RT.M %+% .,
      RT.M_F = p.RT.M + facet_grid(c_choice~participant))
-
+f.RT.M$RT.M_F
 ### RT - SI COMPARED TO no SI
 s.RT.SI<-
   group_by(my.data,participant,c_choice,social3)%>%
@@ -104,12 +103,12 @@ p.RT.D <-
 f.RT.D <- group_by(my.data,participant)%>%
   do(RT.D = p.RT.D %+% .,
      RT.D_F = p.RT.D + facet_grid(social3~participant))
-
+#f.RT.D$RT.D_F
 ### CONFIDENCE - MEAN
 s.conf.M<-
   group_by(my.data,participant,c_choice,social3)%>%
   summarise(meanCorr=mean(zConf,na.rm=T))
-  
+
 p.conf.M <- 
   ggplot(aes(y=meanCorr,x=social3,fill=social3),data=s.conf.M) + 
   geom_bar(stat='identity',position="dodge")+
@@ -121,7 +120,7 @@ p.conf.M <-
 f.conf.M <- group_by(s.conf.M,participant) %>%
   do(conf.M = p.conf.M %+% .,
      conf.M_F = p.conf.M + facet_grid(c_choice~participant))
-
+f.conf.M$conf.M_F[1]
 ### CONFIDENCE - DISTRIBUTION
 p.conf.D <- 
   ggplot(aes(x=zConf,fill=c_choice),data=my.data) + 
@@ -131,7 +130,7 @@ p.conf.D <-
 f.conf.D <- group_by(my.data,participant)%>%
   do(conf.D = p.conf.D %+% .,
      conf.D_F = p.conf.D + facet_grid(social3~participant))
-
+f.conf.D$conf.D_F[1]
 
 ### CONFIDENCE - SI COMPARED TO no SI
 s.conf.SI<-
@@ -153,7 +152,7 @@ f.conf.SI <- group_by(s.RT.SI,participant) %>%
   do(conf.SI = p.conf.SI %+% .,
      conf.SI_F = p.conf.SI + facet_grid(c_choice~participant))
 
-
+f.conf.SI$conf.SI_F[1]
 ### PUT ALL PLOTS INTO A SINGLE TABLE
 
 # create a list with all data.frames to be merged
@@ -167,6 +166,6 @@ save(basic_plots,file='basic_plots.RData')
 
 
 
-
+my.data$key_resp_direction.corr
 
 

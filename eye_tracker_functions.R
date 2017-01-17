@@ -107,9 +107,9 @@ calc_eye_tracker_values<-function(eye.data){
     dcast(fix+trial~.,fun=sum) 
   names(ec.final)<-c("fix","trial","duration")
   ec.final$duration2<-as.integer(ec.final$duration)
-  ec.final<-
-    ec.final %>% 
-    filter(duration<2e+06)
+  #ec.final<-
+   # ec.final %>% 
+    #filter(duration<2e+06)
   #ggplot(aes(x=(duration2/360000)),data=ec.final)+geom_histogram()+facet_wrap(~fix)+xlab("time[s]")
   
   #calculate right of total left+right
@@ -128,6 +128,17 @@ calc_eye_tracker_values<-function(eye.data){
     summarise(first_fix=head(fix,n=1),
               last_fix=tail(fix,n=1),
               changes=length(fix))
+  #sometimes fix first looses a trial
+  a<-seq(1,240)
+  add<-a[!a%in%fix.first$trial]
+  if (length(add)>0)
+  for (i in add){
+    k<-fix.first[1,]
+    k[1,]<-NA
+    k$trial<-i
+    fix.first<-bind_rows(fix.first,k)
+    fix.first<-fix.first[order(fix.first$trial),]
+  }
   fix.first$duration_left<-ec.wide$left
   fix.first$duration_right<-ec.wide$right
   fix.first$duration_none<-ec.wide$none
