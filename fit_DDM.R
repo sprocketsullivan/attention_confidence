@@ -252,46 +252,112 @@ for(i in 1:length(select)){
   
 }
 
-save(file='DDM.RData', list = ls())
+save(file='DDM_select.RData', list = ls())
 
 ###########################################################################
+
+## plot Z/V
+m.SP <- matrix(NA,nrow=10,ncol=4)
+colnames(m.SP)<-c("v","z.Rght","z.Left","Z.Incg")
+m.RE <- matrix(NA,nrow=10,ncol=2)
+colnames(m.RE)<-c("v","z")
+m.SPDR <- matrix(NA,nrow=10,ncol=6)
+colnames(m.SPDR)<-c("v.Rght","v.Left","v.Incg","z.Rght","z.Left","Z.Incg")
+
+
+for (ipart in 1:7){
+  m.SP[ipart,1:4] <-participant1$SP[[ipart]][2:5,1]
+  m.RE[ipart,1:2] <-participant1$RE[[ipart]][2:3,1]
+  m.SPDR[ipart,1:6] <-participant1$SPDR[[ipart]][2:7,1]
+}
+for (ipart in 1:3){
+  m.SP[ipart+7,1:4] <-participant2$SP[[ipart]][2:5,1]
+  m.RE[ipart+7,1:2] <-participant2$RE[[ipart]][2:3,1]
+  m.SPDR[ipart+7,1:6] <-participant2$SPDR[[ipart]][2:7,1]
+}
+
+m.SP<-data.frame(m.SP)
+m.RE<-data.frame(m.RE)
+m.SPDR <- data.frame(m.SPDR)
+
+m.SP$part<-c(1811,1821,1831,1842,1851,3341,3352,31861,31871,31891)
+m.RE$part<-c(1811,1821,1831,1842,1851,3341,3352,31861,31871,31891)
+m.SPDR$part<-c(1811,1821,1831,1842,1851,3341,3352,31861,31871,31891)
+
+m.SP.p<-melt(m.SP,id.vars="part")
+m.SPDR.p<-melt(m.SPDR,id.vars="part")
+m.RE.p<-melt(m.RE,id.vars="part")
+
+# PLOT
+p.SP = ggplot(aes(x=variable, y=value, fill=variable),data=m.SP.p) + 
+  geom_bar(stat = "identity") + 
+  xlab("condition") + ylab("") + 
+  geom_abline(intercept = 0, slope = 0)
+
+f.SP <- group_by(m.SP.p,part) %>%
+  do(SP = p.SP %+% ., 
+     SP_F = p.SP + facet_wrap(~ part))
+
+p.SPDR = ggplot(aes(x=variable, y=value, fill=variable),data=m.SPDR.p) + 
+  geom_bar(stat = "identity") + 
+  xlab("condition") + ylab("") + 
+  geom_abline(intercept = 0, slope = 0)
+
+f.SPDR <- group_by(m.SPDR.p,part) %>%
+  do(SPDR = p.SPDR %+% ., 
+     SPDR_F = p.SPDR + facet_wrap(~ part))
+
+p.RE = ggplot(aes(x=variable, y=value, fill=variable),data=m.RE.p) + 
+  geom_bar(stat = "identity") + 
+  xlab("") + ylab("") + 
+  geom_abline(intercept = 0, slope = 0)
+
+f.RE <- group_by(m.RE.p,part) %>%
+  do(RE = p.RE %+% ., 
+     RE_F = p.RE + facet_wrap(~ part))
+
+f.all <- list(f.SP,f.SPDR,f.RE)
+DDM_plots <- Reduce(function(...) merge(...,by = "part", all = TRUE), f.all)
+
+save(DDM_plots,file="DDM_plots.RData")
+
 # # DO SOME PLOTS
 # 
-# # PLOT WEIGHTS
-# m.WAIC <- matrix(NA,nrow=9,ncol=6)
-# 
-# for (ipart in 1:9){
-#   m.WAIC[ipart,1:6] <-WAIC$weights[[ipart]][1,1:6]
-# }
-# 
-# colnames(m.w)<- c("RE","SP","SPr","DR","DRr","SPDR")
-# 
-# m.w <- matrix(NA,nrow=9,ncol=6)
-# 
-# for (ipart in 1:9){
-#   m.w[ipart,1:6] <-WAIC$weights[[ipart]][2,1:6]
-# }
-# 
-# colnames(m.w)<- c("SP","SPDR","RE")
-# 
-# m.w<-data.frame(m.w)
-# m.WAIC<-data.frame(m.WAIC)
-# 
-# m.w$part <- select
-# m.WAIC$part <-select
-# 
-# m.w.p <- melt(m.w, id.vars="part")
-# m.WAIC.p <- melt(m.WAIC, id.vars="part")
-# 
-# p.WAIC = ggplot(aes(x=variable, y=value),data=m.WAIC.p) + geom_bar(stat = "identity") + xlab("model")
-# p.w = ggplot(aes(x=variable, y=value),data=m.w.p) + geom_bar(stat = "identity")+ xlab("model")
-# 
-# # do the graph for all participants and save it into a list
-# fig.WAIC.p <- group_by(m.WAIC.p,part) %>%
-#   do(plots = p.WAIC %+% .)
-# 
-# fig.w.p <- group_by(m.w.p,part) %>%
-#   do(plots = p.w %+% . )
-# 
-# grid.arrange(fig.w.p$plots[[1]],fig.w.p$plots[[2]],fig.w.p$plots[[3]],fig.w.p$plots[[4]],fig.w.p$plots[[5]],fig.w.p$plots[[6]],fig.w.p$plots[[7]],fig.w.p$plots[[8]],fig.w.p$plots[[9]], ncol=3, nrow=3)
-# 
+# PLOT WEIGHTS
+m.WAIC <- matrix(NA,nrow=3,ncol=3)
+
+for (ipart in 1:3){
+  m.WAIC[ipart,1:3] <-WAIC$weights[[ipart]][1,1:3]
+}
+
+colnames(m.w)<- c("SP","SPDR","RE")
+
+m.w <- matrix(NA,nrow=3,ncol=3)
+
+for (ipart in 1:3){
+  m.w[ipart,1:3] <-WAIC$weights[[ipart]][2,1:3]
+}
+
+colnames(m.w)<- c("SP","SPDR","RE")
+
+m.w<-data.frame(m.w)
+m.WAIC<-data.frame(m.WAIC)
+
+m.w$part <- select
+m.WAIC$part <-select
+
+m.w.p <- melt(m.w, id.vars="part")
+m.WAIC.p <- melt(m.WAIC, id.vars="part")
+
+p.WAIC = ggplot(aes(x=variable, y=value),data=m.WAIC.p) + geom_bar(stat = "identity") + xlab("model")
+p.w = ggplot(aes(x=variable, y=value),data=m.w.p) + geom_bar(stat = "identity")+ xlab("model")
+
+# do the graph for all participants and save it into a list
+fig.WAIC.p <- group_by(m.WAIC.p,part) %>%
+  do(plots = p.WAIC %+% .)
+
+fig.w.p <- group_by(m.w.p,part) %>%
+  do(plots = p.w %+% . )
+
+grid.arrange(fig.w.p$plots[[1]],fig.w.p$plots[[2]],fig.w.p$plots[[3]],fig.w.p$plots[[4]],fig.w.p$plots[[5]],fig.w.p$plots[[6]],fig.w.p$plots[[7]], ncol=4, nrow=2)
+

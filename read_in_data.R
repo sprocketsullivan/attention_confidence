@@ -24,7 +24,7 @@ db.folder<-get.dropbox.folder()
 data.folder<-c(paste(db.folder,"\\UlfGesaRasmus\\Confidence_Task_Magda\\confidence_grates\\Versions of the Task\\arrow_CURRENT\\Data",sep=""))
 
 # participants to exclude
-part.excl<-NULL
+part.excl<-c(1811,1821,1851,3352)
 ###############################################################################
 
 ### READ IN DEMOGRAPHIC DATA
@@ -48,6 +48,8 @@ save(my.data,file='confidence_attention_DM.RData')
 files<-list.files(path=data.folder,pattern='*phase2.csv',full.names=T)
 my.data<-rbindlist(lapply(files, fread),use.names=TRUE,fill=TRUE) 
 
+# exclude participants
+my.data<-subset(my.data,!participant %in% part.excl)
 
 # SOME BASIC STATS
 
