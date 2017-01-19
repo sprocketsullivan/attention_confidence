@@ -17,18 +17,28 @@ DataMetaD<- function (filtered.data, nBins=3) {
   #filtered.data<-filtered.data[-is.na(filtered.data$binned),]
   # Calculates nR_S1, nR_S2
   nR_S1<-
-    filter(filtered.data,key_resp_direction.keys=="left")%>%
+    filtered.data %>% 
     group_by(key_resp_direction.corr,binned)%>%
+    filter(key_resp_direction.keys=="left")%>%
     summarise(conf_count=sum(control_var))%>%
     spread(key_resp_direction.corr,value=conf_count,drop=F,fill=0)
-  nR_S1<-c(as.numeric(nR_S1$`1`)[nBins:1],as.numeric(nR_S1$`0`))
+  a<-as.numeric(nR_S1$`1`)[nBins:1]
+  b<-as.numeric(nR_S1$`0`)
+  if (length(a)!=nBins)a<-rep(0,nBins)
+  if (length(b)!=nBins)b<-rep(0,nBins)
+  nR_S1<-c(a,b)
   nR_S1[is.na(nR_S1)]<-0
   nR_S2<-
-    filter(filtered.data,key_resp_direction.keys=="right")%>%
+    filtered.data %>% 
     group_by(key_resp_direction.corr,binned)%>%
+    filter(key_resp_direction.keys=="right")%>%
     summarise(conf_count=sum(control_var))%>%
     spread(key_resp_direction.corr,value=conf_count,drop=F,fill=0)
-  nR_S2<-c(as.numeric(nR_S2$`0`)[nBins:1],as.numeric(nR_S2$`1`))
+  a<-as.numeric(nR_S2$`0`)[nBins:1]
+  b<-as.numeric(nR_S2$`1`)
+  if (length(a)!=nBins)a<-rep(0,nBins)
+  if (length(b)!=nBins)b<-rep(0,nBins)
+  nR_S2<-c(a,b)
   nR_S2[is.na(nR_S2)]<-0
   return(c(nR_S1,nR_S2))
 }

@@ -48,7 +48,7 @@ for (iSI in 1:3){
   run.v <- c(1:length(pID))
   for (iparticipant in run.v){
     f.data <- 
-      filter(my.data,(!is.na(zConf)))%>%
+      filter(my.data,(!is.na(zConf)&key_resp_direction.keys!="None"))%>%
       filter(social==SI[iSI]&participant==pID[iparticipant])
     model <-DataMetaD(f.data)%>%
       FitMetaD()
