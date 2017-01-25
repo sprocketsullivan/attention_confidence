@@ -73,7 +73,7 @@ p.RT.M <-
 f.RT.M <- group_by(s.RT.M,participant) %>%
   do(RT.M = p.RT.M %+% .,
      RT.M_F = p.RT.M + facet_grid(c_choice~participant))
-f.RT.M$RT.M_F
+f.RT.M$RT.M_F[[1]]
 ### RT - SI COMPARED TO no SI
 s.RT.SI<-
   group_by(my.data,participant,c_choice,social3)%>%
@@ -165,7 +165,5 @@ basic_plots <- Reduce(function(...) merge(...,by = "participant", all = TRUE), f
 save(basic_plots,file='basic_plots.RData')
 
 
-
-my.data$key_resp_direction.corr
 
 

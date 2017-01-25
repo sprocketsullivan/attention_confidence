@@ -24,7 +24,7 @@ db.folder<-get.dropbox.folder()
 data.folder<-c(paste(db.folder,"\\UlfGesaRasmus\\Confidence_Task_Magda\\confidence_grates\\Versions of the Task\\arrow_CURRENT\\Data",sep=""))
 
 # participants to exclude
-part.excl<-c(1811,1821,1851,3352)
+part.excl<-c(1811,1821,1851,3352,2462,2482,7851)
 ###############################################################################
 
 ### READ IN DEMOGRAPHIC DATA

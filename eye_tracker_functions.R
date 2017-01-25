@@ -62,8 +62,8 @@ create_eye_track_data<-function(){
   #create vector
   
   left.bounds<-c(210,630)
-  right.bounds<-c(1030,1450)
-  fixation.bounds<-c(700,900)
+  right.bounds<-c(1050,1470)
+  fixation.bounds<-c(740,940)
   eye.data$fix<-"none"
   eye.data$fix[(eye.data$V2-left.bounds[1])*(eye.data$V2-left.bounds[2])<0]<-c("left")
   eye.data$fix[(eye.data$V2-right.bounds[1])*(eye.data$V2-right.bounds[2])<0]<-c("right")
@@ -107,6 +107,20 @@ calc_eye_tracker_values<-function(eye.data){
     dcast(fix+trial~.,fun=sum) 
   names(ec.final)<-c("fix","trial","duration")
   ec.final$duration2<-as.integer(ec.final$duration)
+  #now get last fixation durations
+  ec.fl<-
+    ec.data %>% 
+    select(fix,trial,duration) %>%
+    dcast(fix+trial~.,fun=function(x) tail(x,n=1),value.var="duration",fill=0) 
+  names(ec.fl)<-c("fix","trial","last_fix")
+  ec.fl$last_fix<-as.integer(ec.fl$last_fix)
+  #and first fixation duration
+  ec.ff<-
+    ec.data %>% 
+    select(fix,trial,duration) %>%
+    dcast(fix+trial~.,fun=function(x) head(x,n=1),value.var="duration",fill=0) 
+    names(ec.ff)<-c("fix","trial","first_fix")
+    ec.ff$first_fix<-as.integer(ec.ff$first_fix)
   #ec.final<-
    # ec.final %>% 
     #filter(duration<2e+06)
@@ -118,7 +132,15 @@ calc_eye_tracker_values<-function(eye.data){
     select(fix,trial,duration2) %>% 
     spread(fix,duration2) %>% 
     mutate(ratio=right/(left+right))
-  
+  #make transformation for last and first fixation durations
+  ec.wide.last.dur<-
+    ec.fl %>% 
+    select(fix,trial,last_fix) %>% 
+    spread(fix,last_fix)
+  ec.wide.first.dur<-
+    ec.ff %>% 
+    select(fix,trial,first_fix) %>% 
+    spread(fix,first_fix)
   #fixate at which side first in each trial
   fix.first<-
     eye.data %>%
@@ -143,5 +165,7 @@ calc_eye_tracker_values<-function(eye.data){
   fix.first$duration_right<-ec.wide$right
   fix.first$duration_none<-ec.wide$none
   fix.first$duration_fix<-ec.wide$fix
+  fix.first$duration_first_fix<-ifelse(fix.first$first_fix=="left",ec.wide.first.dur$left,ec.wide.first.dur$right)
+  fix.first$duration_last_fix<-ifelse(fix.first$first_fix=="left",ec.wide.last.dur$left,ec.wide.last.dur$right)
   return(fix.first)
 }
