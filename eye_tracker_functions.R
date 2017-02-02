@@ -154,6 +154,37 @@ create_eye_track_data<-function(){
   #last cell must be 2(end of fixation) - should be true anyway but better safe than sorry
   eye.data$change[nrow(eye.data)]<-2
  
+ 
+  
+  
+   # LABEL THE FIRST AND LAST MEANINGFUL(LEFT/RIGHT) FIXATION OF THE TRIAL
+  eye.data$fixPos<-"none"
+  
+  helper2<-eye.data$fixPos
+  helper<-eye.data$V1
+  
+  for(itrial in unique(eye.data$trial)){
+    trial.data<-
+      eye.data %>%
+      select(V1,V4,trial,change,fix) %>%
+      filter(trial==itrial&fix%in%c("left","right"))
+    start.fix = trial.data$V1[which(trial.data$change==1)]
+    end.fix = trial.data$V1[which(trial.data$change==2)]
+    
+    if (length(start.fix)==0){next}
+    
+    helper2[helper>=start.fix[1]&helper<=end.fix[1]]<-"firstFix"
+    helper2[helper>=start.fix[length(start.fix)]&helper<=end.fix[length(start.fix)]]<-"lastFix"
+  }
+  
+  # add to the main file
+  eye.data$fixPos<-helper2
+  
+  # clear up  
+  rm(helper,helper2)
+  
+  
+  
   
    #check
   #ggplot(aes(x=as.integer(V1/1000),y=V2),data=subset(eye.data,trial<=20))+geom_line()+facet_wrap(~trial,scales="free_x")+geom_line(aes(y=change*1000,x=as.integer(V1/1000)))
@@ -260,29 +291,7 @@ calc_eye_tracker_values<-function(eye.data){
   
   ### PUPIL DIAMETER
  
-  # labels the first and last fixation of the trial
-  eye.data$fixPos<-"none"
-  
-  helper2<-eye.data$fixPos
-  helper<-eye.data$V1
-  
-  for(itrial in unique(eye.data$trial)){
-    trial.data<-
-      eye.data %>%
-      select(V1,V4,trial,change,fix) %>%
-      filter(trial==itrial)
-    start.fix = trial.data$V1[which(trial.data$change==1)]
-    end.fix = trial.data$V1[which(trial.data$change==2)]
-    
-    helper2[helper>=start.fix[1]&helper<=end.fix[1]]<-"firstFix"
-    helper2[helper>=start.fix[length(start.fix)]&helper<=end.fix[length(start.fix)]]<-"lastFix"
-    }
-  
-  # add to the main file
-  eye.data$fixPos<-helper2
-  
-  # clear up  
-  rm(helper,helper2)
+
   
   # calculate the mean pupil diameter for the whole duration of the trial
   pupil_all<-
@@ -304,6 +313,19 @@ calc_eye_tracker_values<-function(eye.data){
   # merges those together 
   pupil <- merge(x=pupil_all,y=pupil_fix,by="trial")
   
+  # sometimes pupil looses a trial
+  # this adds the lost trials to the data frame with NA as values
+  a<-seq(1,240)
+  add<-a[!a%in%pupil$trial]
+  if (length(add)>0)
+    for (i in add){
+      k<-pupil[1,]
+      k[1,]<-NA
+      k$trial<-i
+      pupil<-bind_rows(pupil,k)
+      pupil<-pupil[order(pupil$trial),]
+    }
+  
   # ADD PUPIL DATA TO THE FIX.FIRST
   eye.values <- merge(x=fix.first,y=pupil,by="trial")
   
@@ -311,3 +333,66 @@ calc_eye_tracker_values<-function(eye.data){
   
   return(eye.values)
 }
+
+eye_tracker_fixation<-function(eye.data){
+  
+  # NUMBER THE FIXATIONS and ADD TIMINGS TO THEM
+  eye.data$fixNum <-0
+  eye.data$time <- 0
+  
+  helper3<-eye.data$time
+  helper2<-eye.data$fixNum
+  helper<-eye.data$V1
+  
+  for(itrial in unique(eye.data$trial)){
+    trial.data<-
+      eye.data %>%
+      select(V1,V4,trial,change,fix) %>%
+      filter(trial==itrial)
+    fix.num.s = trial.data$V1[which(trial.data$change==1)]
+    fix.num.e = trial.data$V1[which(trial.data$change==2)]
+    
+    for(ifix in 1:length(fix.num.s)){
+      helper2[helper>=fix.num.s[ifix]&helper<=fix.num.e[ifix]]<-ifix
+      
+      # must be smaller number (or float?) to work, otherwise the conversion from numeric to vector comes up with weird values
+      helper3[helper>=fix.num.s[ifix]&helper<=fix.num.e[ifix]]<-(helper[helper>=fix.num.s[ifix]&helper<=fix.num.e[ifix]]-helper[helper==fix.num.e[ifix]])/1000
+    }
+  }
+  
+  # add to the main file
+  eye.data$fixNum<-helper2
+  eye.data$time <- helper3
+  
+  # clear up  
+  rm(helper,helper2,helper3)
+  
+  
+  # ADD TIMINGS TO TRIALS
+  
+  eye.data$timeTrial <- 0
+  
+  helper2<-eye.data$timeTrial
+  helper<-eye.data$V1
+  
+  for(itrial in unique(eye.data$trial)){
+    trial.data<-
+      eye.data %>%
+      select(V1,trial) %>%
+      filter(trial==itrial)
+    start.trial = min(trial.data$V1)
+    end.trial = max(trial.data$V1)
+    
+    helper2[helper>=start.trial&helper<=end.trial]<-(helper[helper>=start.trial&helper<=end.trial]-helper[helper==end.trial])/1000
+}
+
+
+# add to the main file
+eye.data$timeTrial <- helper2
+
+# clear up  
+rm(helper,helper2)
+
+return(eye.data)
+}
+
