@@ -24,11 +24,11 @@ db.folder<-get.dropbox.folder()
 data.folder<-c(paste(db.folder,"\\UlfGesaRasmus\\Confidence_Task_Magda\\confidence_grates\\Versions of the Task\\arrow_CURRENT\\Data",sep=""))
 
 # participants to exclude
-part.excl<-c(1811,1821,1851,3352,2462,2482,7851)
+part.excl<-c(1811,1821,1851,3352,2462,2482,2551,6252,6261,4941,5162,5171,7851)
 ###############################################################################
 
 ### READ IN DEMOGRAPHIC DATA
-
+dir(data.folder)
 # Extract data from Participants_Fragebögen and save as my.demographics
 files<-list.files(path=data.folder,pattern='*gen.csv',full.names=T)
 my.demo<-data.frame(lapply(files, fread))
@@ -38,7 +38,7 @@ keep <- c("ID.used","Alter","Geschlecht")
 my.demo <- my.demo[keep]
 
 # SAVE IT
-save(my.data,file='confidence_attention_DM.RData')
+#save(my.data,file='confidence_attention_DM.RData')
 
 ################################################################################
 
@@ -63,7 +63,7 @@ no.part<-length(unique(my.data$participant))
 # ADD NEW COLUMNS
 
 # CONF - confidence corrected  for left and right choice
-my.data$conf<-my.data$PDW.response
+my.data$conf<-as.numeric(my.data$PDW.response)
 my.data$conf<-(ifelse(my.data$conf<=0.5,0.5-my.data$conf,my.data$conf-0.5))
 
 # ZCONF - Normalized confidence ratings and put them into a new column
@@ -80,7 +80,7 @@ my.data$social[str_detect(my.data$condition,c("incongruent*"))]<- -1
 # SOCIAL2, 3 - in words
 my.data$social2<-factor(my.data$social,labels = c("invalid\nsocial information","no social\ninformation","valid\nsocial information"))
 my.data$social3<-factor(my.data$social,labels=c("invalid","none","valid"))
-
+#my.data$social3<-c("none")
 # C_CHOICE - CORREcT or INCORRECT response
 my.data$c_choice<-factor(my.data$key_resp_direction.corr,labels=c("incorrect","correct"))
 

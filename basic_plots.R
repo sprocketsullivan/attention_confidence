@@ -16,8 +16,7 @@
 
 ##################################################################
 # clear the workspace
-rm(list=ls())
-
+#rm(list=ls())
 ################################################################
 
 #### PRE-REQ
@@ -50,13 +49,13 @@ p.accuracy <-
   ggplot(aes(y=mean_corr,x=social3,fill=social3),data=s.accuracy) +
   geom_bar(stat='identity',position="dodge") +
   ylab("Proportion correct") + xlab("") + theme_classic()+
-  geom_hline(yintercept=0,linetype="dashed") +
+  geom_hline(yintercept=50,linetype="dashed") +
   scale_fill_manual(values=colorScheme)
 
 f.accuracy <- group_by(s.accuracy,participant) %>%
   do(ACC = p.accuracy %+% ., 
      ACC_F = p.accuracy + facet_wrap(~ participant))
-#f.accuracy$ACC_F
+f.accuracy$ACC_F[[1]]
 ### RT - MEAN
 s.RT.M<-
   group_by(my.data,participant,c_choice,social3)%>%
@@ -103,7 +102,7 @@ p.RT.D <-
 f.RT.D <- group_by(my.data,participant)%>%
   do(RT.D = p.RT.D %+% .,
      RT.D_F = p.RT.D + facet_grid(social3~participant))
-#f.RT.D$RT.D_F
+f.RT.D$RT.D_F[[1]]
 ### CONFIDENCE - MEAN
 s.conf.M<-
   group_by(my.data,participant,c_choice,social3)%>%
@@ -122,14 +121,17 @@ f.conf.M <- group_by(s.conf.M,participant) %>%
      conf.M_F = p.conf.M + facet_grid(c_choice~participant))
 f.conf.M$conf.M_F[1]
 ### CONFIDENCE - DISTRIBUTION
-p.conf.D <- 
-  ggplot(aes(x=zConf,fill=c_choice),data=my.data) + 
-  geom_density(alpha=0.2) +
-  facet_wrap(~ social3)
 
-f.conf.D <- group_by(my.data,participant)%>%
+p.conf.D <- 
+  ggplot(aes(x=conf,fill=c_choice),data=subset(my.data,social3=="none")) + 
+  geom_histogram(position='dodge',bins=10) +
+  facet_wrap(~ social3,scales="free_y")
+
+f.conf.D <- 
+  group_by(my.data,participant)%>%
+  filter(social3=="none") %>% 
   do(conf.D = p.conf.D %+% .,
-     conf.D_F = p.conf.D + facet_grid(social3~participant))
+     conf.D_F = p.conf.D + facet_wrap(~participant))
 f.conf.D$conf.D_F[1]
 
 ### CONFIDENCE - SI COMPARED TO no SI

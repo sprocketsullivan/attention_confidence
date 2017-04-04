@@ -1,6 +1,13 @@
 #dwell time difference correct-incorrect
+source("lba_calc.R")
 my.data$dt_diff<-0
 my.data$dt_diff<-ifelse(my.data$correct=="left",my.data$duration_left-my.data$duration_right,my.data$duration_right-my.data$duration_left)
+
+my.data$dwell_correct<-0
+my.data$dwell_incorrect<-0
+my.data$dwell_correct<-ifelse(my.data$correct=="left",my.data$duration_left,my.data$duration_right)
+my.data$dwell_incorrect<-ifelse(my.data$correct=="left",my.data$duration_right,my.data$duration_left)
+
 my.data$dwell_chosen<-0
 my.data$dwell_chosen<-ifelse(my.data$key_resp_direction.keys=="left",my.data$duration_left,my.data$duration_right)
 my.data$dwell_unchosen<-ifelse(my.data$key_resp_direction.keys=="left",my.data$duration_right,my.data$duration_left)
@@ -14,9 +21,8 @@ for (i in 1:length(unique(my.data$participant))){
   m.fit.sum<-summary.dmc(m.fit)
   my.data$lba_v_cor[my.data$participant==unique(my.data$participant)[i]]<-m.fit.sum$statistics[3,1]
   my.data$lba_v_incor[my.data$participant==unique(my.data$participant)[i]]<-m.fit.sum$statistics[4,1]
-  m.fitty[[i]]<-m.fit
 }
-summary.dmc(m.fitty[[1]])
+summary.dmc(m.fitty[[10]])
 my.data<-
   my.data %>% 
   mutate(ratio3=ifelse(correct==key_resp_direction.keys,dwell_chosen*lba_v_cor/(dwell_unchosen*lba_v_incor+dwell_chosen*lba_v_cor),dwell_chosen*lba_v_incor/(dwell_unchosen*lba_v_cor+dwell_chosen*lba_v_incor)))
@@ -26,22 +32,124 @@ my.data<-
 
 my.data<-
   my.data %>% 
-  mutate(weight_conf=ifelse(correct==key_resp_direction.keys,dwell_chosen*lba_v_cor+dwell_unchosen*lba_v_incor,dwell_chosen*lba_v_incor+dwell_unchosen*lba_v_cor)) %>% 
-  mutate(strength_conf=ifelse(correct==key_resp_direction.keys,(dwell_chosen*lba_v_cor-dwell_unchosen*lba_v_incor)/(dwell_chosen*lba_v_cor+dwell_unchosen*lba_v_incor),(dwell_chosen*lba_v_incor-dwell_unchosen*lba_v_cor)/(dwell_chosen*lba_v_incor+dwell_unchosen*lba_v_cor))) %>% 
-  mutate(p_cor=ifelse(correct==key_resp_direction.keys,dwell_chosen*lba_v_cor-dwell_unchosen*lba_v_incor,dwell_chosen*lba_v_incor-dwell_unchosen*lba_v_cor))
+  mutate(weight_conf=dwell_correct+dwell_incorrect) %>% 
+  mutate(strength_conf=(dwell_correct-dwell_incorrect)/(dwell_correct+dwell_incorrect)) %>% 
+  mutate(strength_conf2=dwell_correct-dwell_incorrect) %>%
+  mutate(strength_conf3=(dwell_correct-dwell_incorrect)/(dwell_correct+dwell_incorrect)) %>%
+  mutate(ratio_weighted_evidence2=dwell_chosen/dwell_unchosen) %>% 
+  mutate(ratio_weighted_evidence=dwell_correct/dwell_incorrect) %>% 
+  mutate(bin_strength = ntile(strength_conf, 6)) %>% 
+  mutate(bin_weight = ntile(weight_conf, 6)) 
+
+c_a_per_strength<-
+  my.data %>% 
+  group_by(participant,bin_strength) %>% 
+  filter(social3=="none") %>% 
+  summarise(mean_cor=mean(key_resp_direction.corr),
+            sd_cor=sd(key_resp_direction.corr),
+            N=n(),
+            se_cor= sd(key_resp_direction.corr)/ sqrt(n()),
+            ymin=mean(key_resp_direction.corr)-sd(key_resp_direction.corr)/ sqrt(n()),
+            ymax=mean(key_resp_direction.corr)+sd(key_resp_direction.corr)/ sqrt(n()))
+ggplot(aes(y=mean_cor,x=bin_strength),data=c_a_per_strength)+geom_point()+facet_wrap(~participant)+geom_line()+geom_errorbar(aes(ymin=ymin,ymax=ymax),width=0.1)
+c_a_per_weight<-
+  my.data %>% 
+  group_by(participant,bin_weight) %>% 
+  filter(social3=="none") %>% 
+  summarise(mean_cor=mean(key_resp_direction.corr),
+            sd=sd(key_resp_direction.corr),
+            N=n(),
+            se_cor= sd(key_resp_direction.corr)/ sqrt(n()),
+            ymin=mean(key_resp_direction.corr)-sd(key_resp_direction.corr)/ sqrt(n()),
+            ymax=mean(key_resp_direction.corr)+sd(key_resp_direction.corr)/ sqrt(n()))
+ggplot(aes(y=mean_cor,x=bin_weight),data=c_a_per_weight)+geom_point()+facet_wrap(~participant,scales="free_y")+geom_line()+geom_errorbar(aes(ymin=ymin,ymax=ymax),width=0.1)
+
+
+c_a_per_weight<-
+  my.data %>% 
+  group_by(participant,bin_weight) %>% 
+  filter(social3=="none") %>% 
+  summarise(mean_cor=mean(zConf),
+            sd=sd(zConf),
+            N=n(),
+            se_cor= sd(zConf)/ sqrt(n()),
+            ymin=mean(zConf)-sd(zConf)/ sqrt(n()),
+            ymax=mean(zConf)+sd(zConf)/ sqrt(n()))
+ggplot(aes(y=mean_cor,x=bin_weight),data=c_a_per_weight)+geom_point()+facet_wrap(~participant,scales="free_y")+geom_line()+geom_errorbar(aes(ymin=ymin,ymax=ymax),width=0.1)
+c_a_per_strength<-
+  my.data %>% 
+  group_by(participant,bin_strength) %>% 
+  filter(social3=="none") %>% 
+  summarise(mean_cor=mean(zConf),
+            sd_cor=sd(zConf),
+            N=n(),
+            se_cor= sd(zConf)/ sqrt(n()),
+            ymin=mean(zConf)-sd(zConf)/ sqrt(n()),
+            ymax=mean(zConf)+sd(zConf)/ sqrt(n()))
+ggplot(aes(y=mean_cor,x=bin_strength),data=c_a_per_strength)+geom_point()+facet_wrap(~participant,scales="free_y")+geom_line()+geom_errorbar(aes(ymin=ymin,ymax=ymax),width=0.1)
+
 
 m.meta
-m.diff
+
+
+
+ggplot(aes(y=zConf,x=weight_conf),data=subset(my.data,social3=="none"&key_resp_direction.rt<3&ratio_weighted_evidence<3&zConf<4))+geom_point(aes(col=factor(key_resp_direction.corr)))+geom_smooth()+facet_wrap(~participant,scales="free")+theme_classic()+ylab("")+theme(legend.title = element_blank())
+ggplot(aes(y=zConf,x=strength_conf),data=subset(my.data,social3=="none"&key_resp_direction.rt<3&ratio_weighted_evidence<3&zConf<4))+geom_point(aes(col=factor(key_resp_direction.corr)))+geom_smooth()+facet_wrap(~participant,scales="free")+theme_classic()+ylab("")+theme(legend.title = element_blank())
+
+
+
+
+
+
+my.data$key_resp_direction.corr
+
+hist(my.data$dwell_incorrect)
+#my.data$dwell_chosen<-my.data$dwell_chosen/1000000
+#my.data$dwell_unchosen<-my.data$dwell_unchosen/1000000
+#my.data$dwell_correct<-my.data$dwell_correct/1000000
+#my.data$dwell_incorrect<-my.data$dwell_incorrect/1000000
+
 my.data$duration_last_fix<-as.numeric(my.data$duration_last_fix)
 my.data$fix_correct_first<-ifelse(my.data$first_fix==my.data$correct,1,0)
 my.data$fix_correct_last<-ifelse(my.data$last_fix==my.data$correct,1,0)
-ggplot(aes(y=zConf,x=I(key_resp_direction.rt),col=factor(key_resp_direction.corr)),data=subset(my.data,abs(dt_diff)<1000000&social3=="none"))+geom_point()+facet_wrap(~participant,scale="free")+geom_smooth(method="lm")
-ggplot(aes(y=conf,x=I(((weight_conf*strength_conf))),col=factor(key_resp_direction.corr)),data=subset(my.data,social3=="none"&key_resp_direction.rt<3))+geom_point()+facet_wrap(~participant,scales="free")+geom_smooth(method="lm")
-ggplot(aes(y=conf,x=I(((weight_conf*strength_conf))),col=factor(key_resp_direction.corr)),data=subset(my.data,social3=="none"&key_resp_direction.rt<3))+geom_point()+geom_smooth()
-ggplot(aes(y=zConf,x=I((dwell_chosen-dwell_unchosen)*p_cor),col=factor(key_resp_direction.corr)),data=subset(my.data,social3=="none"&key_resp_direction.rt<3))+geom_point()+facet_wrap(~participant,scales="free")+geom_smooth(method="lm")
-ggplot(aes(y=zConf,x=I(dwell_chosen+dwell_unchosen),col=factor(key_resp_direction.corr)),data=subset(my.data,social3=="none"&key_resp_direction.rt<3))+geom_point()+facet_wrap(~participant,scales="free")+geom_smooth(method="lm")
+
+lba_help_cor<-2.3
+lba_help_incor<-1
+ggplot(aes(y=zConf,x=I(ifelse(correct==key_resp_direction.keys,(dwell_chosen*lba_help_cor-dwell_unchosen*lba_help_incor)/(dwell_chosen*lba_help_cor+dwell_unchosen*lba_help_incor),(dwell_chosen*lba_help_incor-dwell_unchosen*lba_help_cor)/(dwell_chosen*lba_help_incor+dwell_unchosen*lba_help_cor))),col=factor(c_choice)),data=subset(my.data,social3=="none"&key_resp_direction.rt<3))+geom_point()+facet_wrap(~participant,scales="free")+ylim(-2,2)+theme_classic()
+
+
+ggplot(aes(y=zConf,x=I((((weight_conf)*strength_conf))),col=c_choice),data=subset(my.data,social3=="none"&key_resp_direction.rt<3))+geom_point()+geom_smooth(method="lm")+facet_wrap(~participant,scales="free")+ylim(-2,2)+xlab("Evidence (strength*weight)")+theme_classic()+ylab("z transformed confidence")+theme(legend.title = element_blank())
+ggplot(aes(y=zConf,x=I(((weight_conf))),col=c_choice),data=subset(my.data,social3=="none"&key_resp_direction.rt<3))+geom_point()+geom_smooth(method="lm")+facet_wrap(~participant,scales="free")+ylim(-2,2)+xlab("Evidence (strength*weight)")+theme_classic()+ylab("z transformed confidence")+theme(legend.title = element_blank())
+ggplot(aes(y=zConf,x=I(((ratio_weighted_evidence))),col=c_choice),data=subset(my.data,social3=="none"&key_resp_direction.rt<3))+geom_point()+geom_smooth(method="lm")+facet_wrap(~participant,scales="free")+ylim(-2,2)+xlab("Evidence (strength*weight)")+theme_classic()+ylab("z transformed confidence")+theme(legend.title = element_blank())
+ggplot(aes(y=zConf,x=I((((weight_conf)))),col=factor(key_resp_direction.corr)),data=subset(my.data,social3=="none"&key_resp_direction.rt<3&zConf<2))+geom_point()+geom_smooth(method="lm")+facet_wrap(~participant,scales="free")
+ggplot(aes(y=zConf,x=I((((strength_conf)))),col=(dwell_correct)),data=subset(my.data,social3=="none"&key_resp_direction.rt<3))+geom_point()+geom_smooth(method="lm")+facet_wrap(~participant,scales="free")
+ggplot(aes(y=zConf,x=I(((dwell_correct*lba_v_cor-(dwell_incorrect*lba_v_incor)))),col=c_choice),data=subset(my.data,social3=="none"&key_resp_direction.rt<3&fix_correct_last==0))+geom_point()+geom_smooth(method="lm")+facet_wrap(~participant,scales="free")+xlab("Evidence (strength*weight)")+theme_classic()+ylab("z transformed confidence")+theme(legend.title = element_blank())
+ggplot(aes(y=I((dwell_correct)-(dwell_incorrect)),x=c_choice),data=subset(my.data,social3=="none"&key_resp_direction.rt<3))+geom_boxplot()+facet_wrap(~participant)
+ggplot(aes(y=I(ratio_weighted_evidence2),x=c_choice),data=subset(my.data,social3=="none"&key_resp_direction.rt<3))+geom_boxplot()+facet_wrap(~participant)+ylim(0,3)
+
+
+
+
+
+my.data$fix_correct_first
+
+my.data$dwell_correct
+my.data$changes
+ggplot(aes(y=zConf,x=I(duration_last_fix/1000000),col=factor(key_resp_direction.corr)),data=subset(my.data,social3=="none"&key_resp_direction.rt<3&(zConf>-1)))+geom_point()+geom_smooth(method="lm")+facet_wrap(~participant,scales="free")+ylim(-2,2)
+
+selector<-seq(1,nrow(my.data))[-which(my.data$conf<0.52&my.data$conf>0.48)]
+
+ggplot(aes(y=key_resp_direction.rt,x=c_choice),data=my.data)+geom_boxplot()+facet_wrap(~participant)
+my.data$key_resp_direction.corr
+
+m.d
+m.meta
+
+ggplot(aes(y=zConf,x=I(((dwell_correct-dwell_incorrect)/(dwell_correct+dwell_incorrect))),col=factor(key_resp_direction.corr)),data=subset(my.data,social3=="none"&key_resp_direction.rt<3))+geom_point()+facet_wrap(~participant,scales="free")+geom_smooth(method="lm")
+ggplot(aes(y=zConf,x=I(((dwell_correct-dwell_incorrect)/(dwell_correct+dwell_incorrect))*strength_conf),col=factor(key_resp_direction.corr)),data=subset(my.data,social3=="none"&key_resp_direction.rt<3))+geom_point()+facet_wrap(~participant,scales="free")+geom_smooth(method="lm")
+ggplot(aes(y=zConf,x=I(dwell_chosen),col=factor(key_resp_direction.corr)),data=subset(my.data,social3=="none"&key_resp_direction.rt<3))+geom_point()+facet_wrap(~participant,scales="free")+geom_smooth(method="lm")
 ggplot(aes(y=zConf,x=I((changes)),col=factor(key_resp_direction.corr)),data=subset(my.data,social3=="none"&key_resp_direction.rt<1.5))+geom_point()+facet_wrap(~participant,scales="free")+geom_smooth(method="lm")
-my.data$conf
+hist(my.data$weight_conf)
 ggplot(aes(y=zConf,x=I((strength_conf)),col=factor(key_resp_direction.corr)),data=subset(my.data,social3=="none"))+geom_point()+facet_wrap(~participant,scales="free")+geom_smooth(method="lm")
 ggplot(aes(y=zConf,x=I((weight_conf)),col=factor(key_resp_direction.corr)),data=subset(my.data,social3=="none"))+geom_point()+facet_wrap(~participant,scales="free")+geom_smooth(method="lm")
 ggplot(aes(y=zConf,x=scale(dt_diff),col=factor(key_resp_direction.corr)),data=subset(my.data,abs(dt_diff)<1000000&social3=="none"))+geom_point()+facet_wrap(~participant)+geom_smooth(method="lm")
@@ -114,6 +222,38 @@ my.data$delta_bound<-my.data$win_evidence-my.data$max_evidence
 
 
 
+save.image("intermediate.Rdata")
+load("intermediate.Rdata")
 
+
+
+
+library(scatterplot3d)
+scatterplot3d(my.data$weight_conf, my.data$strength_conf, my.data$zConf)
+library(rgl)
+k.data<-subset(my.data,participant==unique(my.data$participant)[4]&social3=="none")
+plot3d(k.data$weight_conf, k.data$strength_conf, k.data$zConf, type='s', size=0.5,col=(k.data$key_resp_direction.corr+1))
+
+
+
+
+library(mgcv)
+m.conf<-gam(zConf~s(weight_conf),data=k.data)
+plot(k.data$zConf~k.data$strength_conf)
+summary(m.conf)
+plot(m.conf)
+plot(k.data$zConf,fitted(m.conf))
+
+
+
+
+m.prop.corr<-list()
+my.data$glm.fit<-0
+#get values for each player
+for (i in 1:length(unique(my.data$participant))){
+  fit.data<-subset(my.data,participant==unique(my.data$participant)[i]&social3=="none"&!is.na(dwell_correct)&!is.na(dwell_incorrect))
+  m.fit<-glm(key_resp_direction.corr~dwell_correct-dwell_incorrect,data=fit.data,family=binomial)
+  my.data$glm.fit[my.data$participant==unique(my.data$participant)[i]&my.data$social3=="none"&!is.na(my.data$dwell_correct)&!is.na(my.data$dwell_incorrect)]<-inv.logit(as.numeric(predict(m.fit)))
+}
 
 

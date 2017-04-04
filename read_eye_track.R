@@ -31,10 +31,10 @@ if (!exists("my.data")){
 db.folder<-get.dropbox.folder()
 
 # current data directory (on dropbox)
-data.folder<-c(paste(db.folder,"\\UlfGesaRasmus\\Confidence_Task_Magda\\confidence_grates\\Versions of the Task\\arrow_CURRENT\\Data",sep=""))
+data.folder<-c(paste(db.folder,"\\UlfGesaRasmus\\Confidence_Task_Magda\\confidence_grates\\Versions of the Task\\arrows\\Data",sep=""))
 
 # participants to exclude
-part.excl<-c(1811,1821,1851,3352,2462,2482,7851)
+#part.excl<-c(1811,1821,1851,3352,2462,2482,7851)
 
 #####################################################################
 
